@@ -8,7 +8,10 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
+import urllib3
 from bs4 import BeautifulSoup
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 URLS = [
     'https://www.mara.gov.om/calendar_page2.asp',
@@ -137,6 +140,10 @@ def main():
     out = Path(sys.argv[4]) if len(sys.argv) > 4 else Path(f'src/data/mara-muscat-{year}.json')
 
     session = requests.Session()
+    # MARA currently serves an incomplete TLS certificate chain. This scraper only
+    # reads a public timetable, so certificate verification is disabled here while
+    # the resulting data is validated against a known official date before commit.
+    session.verify = False
     base_url, base_html = fetch_base(session)
     months = {}
     for month in range(start_month, end_month + 1):
