@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Mosque, MosqueSchedule, PrayerKey } from '@/lib/domain/prayer';
 import { createClient } from '@/lib/supabase/browser';
@@ -66,6 +66,10 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
   })), [schedule]);
 
   const [rules, setRules] = useState<DraftRule[]>(initialDraft);
+
+  useEffect(() => {
+    setRules(initialDraft);
+  }, [initialDraft, schedule.mosque.id]);
 
   const changeRule = (prayer: PrayerKey, patch: Partial<DraftRule>) => {
     setRules((current) => current.map((rule) => rule.prayer === prayer ? { ...rule, ...patch } : rule));
