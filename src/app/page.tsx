@@ -1,6 +1,8 @@
 import { PublicPrayerScreen } from './public-prayer-screen';
 import { getMosqueSchedule, listActiveMosques } from '../lib/schedules';
 
+export const dynamic = 'force-dynamic';
+
 function muscatDateKey() {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Muscat',
