@@ -56,6 +56,7 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
   const [newArea, setNewArea] = useState('');
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const initialDraft = useMemo<DraftRule[]>(() => schedule.rows.map((row) => ({
     prayer: row.prayer,
@@ -76,6 +77,14 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
   };
 
   const reset = () => setRules(initialDraft);
+
+  const signOut = async () => {
+    setSigningOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/');
+    router.refresh();
+  };
 
   const saveRules = async () => {
     setSaving(true);
@@ -146,7 +155,12 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
           </div>
           <p>اختر المسجد وعدّل الإقامة بسرعة</p>
         </div>
-        <button className="icon-button" onClick={() => router.push('/')} aria-label="إغلاق">×</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="ghost-action" type="button" onClick={signOut} disabled={signingOut}>
+            {signingOut ? 'جارٍ الخروج…' : 'تسجيل الخروج'}
+          </button>
+          <button className="icon-button" onClick={() => router.push('/')} aria-label="العودة لمواقيت الصلاة">×</button>
+        </div>
       </header>
 
       <section className="admin-mosque-card">
