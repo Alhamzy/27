@@ -1,5 +1,5 @@
 import { PublicPrayerScreen } from './public-prayer-screen';
-import { getMosqueSchedule, listActiveMosques } from '@/lib/schedules';
+import { getMosqueSchedule, listActiveMosques } from '../lib/schedules';
 
 function muscatDateKey() {
   return new Intl.DateTimeFormat('en-CA', {
