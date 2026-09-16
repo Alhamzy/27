@@ -151,7 +151,12 @@ export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; s
             );
           })}
         </div>
-        <CorrectionSuggestion schedule={schedule} />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+          <CorrectionSuggestion schedule={schedule} />
+          <button className="secondary-action" type="button" onClick={() => router.push('/admin')}>
+            دخول المشرفين
+          </button>
+        </div>
       </section>
 
       <footer className="public-footer">
