@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Mosque, MosqueSchedule, PrayerKey } from '../lib/domain/prayer';
+import { CorrectionSuggestion } from './correction-suggestion';
 
 const prayerNames: Record<PrayerKey, string> = {
   fajr: 'الفجر',
@@ -150,6 +151,7 @@ export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; s
             );
           })}
         </div>
+        <CorrectionSuggestion schedule={schedule} />
       </section>
 
       <footer className="public-footer">
