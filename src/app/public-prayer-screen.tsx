@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Mosque, MosqueSchedule, PrayerKey } from '@/lib/domain/prayer';
+import type { Mosque, MosqueSchedule, PrayerKey } from '../lib/domain/prayer';
 
 const prayerNames: Record<PrayerKey, string> = {
   fajr: 'الفجر',
