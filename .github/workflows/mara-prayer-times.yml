@@ -24,16 +24,16 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests beautifulsoup4
-      - name: Fetch September–December 2026 from official MARA timetable
-        run: python scripts/fetch_mara_prayer_times.py 2026 9 12 src/data/mara-muscat-2026.json
+      - name: Fetch all available Oman locations for September–December 2026
+        run: python scripts/fetch_mara_prayer_times.py 2026 9 12 src/data/mara-oman-2026.json
       - name: Commit refreshed mirror
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/data/mara-muscat-2026.json
+          git add src/data/mara-oman-2026.json
           if git diff --cached --quiet; then
             echo 'No prayer-time changes.'
             exit 0
           fi
-          git commit -m 'Refresh official MARA prayer times mirror'
+          git commit -m 'Refresh official Oman MARA prayer times mirror'
           git push
