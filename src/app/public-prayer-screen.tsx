@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Mosque, MosqueSchedule, PrayerKey } from '@/lib/domain/prayer';
 
@@ -26,9 +26,10 @@ function formatTime(time: string) {
   return `${hours.toString().padStart(2, '0')}:${minutes} ${suffix}`;
 }
 
-function relativeFreshness(value: string | null) {
+function relativeFreshness(value: string | null, now: number) {
   if (!value) return 'غير مؤكد حديثاً';
-  const diffHours = Math.floor((Date.now() - new Date(value).getTime()) / 3_600_000);
+  if (!now) return 'جارٍ التحقق من آخر تحديث';
+  const diffHours = Math.floor((now - new Date(value).getTime()) / 3_600_000);
   if (diffHours < 24) return 'تم التأكيد اليوم';
   const days = Math.floor(diffHours / 24);
   if (days === 1) return 'تم التأكيد أمس';
@@ -38,21 +39,22 @@ function relativeFreshness(value: string | null) {
 
 export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; schedule: MosqueSchedule }) {
   const router = useRouter();
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(0);
 
-  // The screen is intentionally self-updating without introducing another data dependency.
-  useMemo(() => {
+  useEffect(() => {
+    setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const nextRow = schedule.rows.find((row) => toOmanDate(schedule.prayerDate, row.iqamahTime).getTime() > now) ?? null;
+  const referenceNow = now || 0;
+  const nextRow = schedule.rows.find((row) => toOmanDate(schedule.prayerDate, row.iqamahTime).getTime() > referenceNow) ?? null;
   const nextIqamah = nextRow ? toOmanDate(schedule.prayerDate, nextRow.iqamahTime).getTime() : null;
-  const countdownMinutes = nextIqamah ? Math.max(0, Math.ceil((nextIqamah - now) / 60_000)) : null;
+  const countdownMinutes = now && nextIqamah ? Math.max(0, Math.ceil((nextIqamah - now) / 60_000)) : null;
 
   const freshestConfirmation = schedule.rows
     .map((row) => row.lastConfirmedAt)
-    .filter(Boolean)
+    .filter((value): value is string => Boolean(value))
     .sort()
     .at(-1) ?? null;
 
@@ -86,7 +88,7 @@ export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; s
         </div>
         <div className="freshness-line">
           <span className="verified-dot" />
-          <span>{relativeFreshness(freshestConfirmation)}</span>
+          <span>{relativeFreshness(freshestConfirmation, now)}</span>
         </div>
       </section>
 
@@ -106,7 +108,7 @@ export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; s
               </div>
             </div>
             <div className="countdown-pill">
-              {countdownMinutes === 0 ? 'تقام الصلاة الآن' : `الإقامة بعد ${countdownMinutes} دقيقة`}
+              {countdownMinutes === null ? 'جارٍ حساب الوقت المتبقي' : countdownMinutes === 0 ? 'تقام الصلاة الآن' : `الإقامة بعد ${countdownMinutes} دقيقة`}
             </div>
           </>
         ) : (
