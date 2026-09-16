@@ -4,7 +4,7 @@ test('public prayer board loads in RTL with live schedule data', async ({ page }
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.locator('main')).toHaveAttribute('data-ui-baseline', 'stitch-arabic-public');
-  await expect(page.getByText('مسجد الهدى')).toBeVisible();
+  await expect(page.locator('.mosque-picker-row strong')).toHaveText('مسجد الهدى');
   await expect(page.getByRole('heading', { name: 'مواقيت اليوم' })).toBeVisible();
   await expect(page.locator('.prayer-row')).toHaveCount(5);
 
