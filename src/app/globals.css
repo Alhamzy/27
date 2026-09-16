@@ -1,0 +1,20 @@
+:root {
+  color-scheme: light;
+  --bg: #f5fbf4;
+  --surface: #ffffff;
+  --ink: #171d19;
+  --muted: #717973;
+  --primary: #1b4332;
+  --gold: #c59b27;
+  --border: #e8e2d9;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Arial, Tahoma, sans-serif;
+}
+button, input, select { font: inherit; }
+main { min-height: 100vh; }
