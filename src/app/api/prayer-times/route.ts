@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMaraMonth, maraGeneratedAt, maraSource } from '@/lib/prayer-times/mara';
+import {
+  getMaraMonth,
+  listMaraLocations,
+  maraGeneratedAt,
+  maraSource,
+  resolveMaraLocation,
+} from '@/lib/prayer-times/mara';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +18,17 @@ function parseInteger(value: string | null, fallback?: number) {
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
+
+    if (params.get('locations') === 'true') {
+      return NextResponse.json({
+        source: maraSource,
+        lastUpdated: maraGeneratedAt,
+        locations: listMaraLocations(),
+      });
+    }
+
+    const locationInput = params.get('city') ?? params.get('location') ?? 'muscat';
+    const location = resolveMaraLocation(locationInput);
     const date = params.get('date');
 
     if (date) {
@@ -22,11 +39,16 @@ export async function GET(request: NextRequest) {
       const month = Number(match[2]);
       if (month < 1 || month > 12) return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
 
-      const days = await getMaraMonth(year, month);
+      const days = await getMaraMonth(year, month, location.key);
       const day = days.find((item) => item.date === date);
       if (!day) return NextResponse.json({ error: 'Prayer times not found for that date' }, { status: 404 });
 
-      return NextResponse.json({ source: maraSource, lastUpdated: maraGeneratedAt, data: day });
+      return NextResponse.json({
+        source: maraSource,
+        location: { key: location.key, name: location.name },
+        lastUpdated: maraGeneratedAt,
+        data: day,
+      });
     }
 
     const year = parseInteger(params.get('year'), 2026);
@@ -35,8 +57,15 @@ export async function GET(request: NextRequest) {
     const month = parseInteger(params.get('month'));
     if (month != null) {
       if (Number.isNaN(month) || month < 1 || month > 12) return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
-      const data = await getMaraMonth(year, month);
-      return NextResponse.json({ source: maraSource, year, month, lastUpdated: maraGeneratedAt, data });
+      const data = await getMaraMonth(year, month, location.key);
+      return NextResponse.json({
+        source: maraSource,
+        location: { key: location.key, name: location.name },
+        year,
+        month,
+        lastUpdated: maraGeneratedAt,
+        data,
+      });
     }
 
     const fromMonth = parseInteger(params.get('fromMonth'), 9);
@@ -47,10 +76,18 @@ export async function GET(request: NextRequest) {
 
     const months = [];
     for (let currentMonth = fromMonth; currentMonth <= toMonth; currentMonth += 1) {
-      months.push({ month: currentMonth, data: await getMaraMonth(year, currentMonth) });
+      months.push({ month: currentMonth, data: await getMaraMonth(year, currentMonth, location.key) });
     }
 
-    return NextResponse.json({ source: maraSource, year, fromMonth, toMonth, lastUpdated: maraGeneratedAt, months });
+    return NextResponse.json({
+      source: maraSource,
+      location: { key: location.key, name: location.name },
+      year,
+      fromMonth,
+      toMonth,
+      lastUpdated: maraGeneratedAt,
+      months,
+    });
   } catch (error) {
     console.error('Prayer-times API failed', error);
     return NextResponse.json(
