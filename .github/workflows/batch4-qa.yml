@@ -1,0 +1,51 @@
+name: Batch 4 QA
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://gjrnqubgwtbnosegxabi.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_IFGMNntvuOu5t8LHdLPduw_rVJAzP4o
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start app
+        run: |
+          nohup npm run start -- --hostname 127.0.0.1 > /tmp/27-app.log 2>&1 &
+          npx wait-on http://127.0.0.1:3000
+
+      - name: Run functional + visual Playwright suite
+        run: npx playwright test
+
+      - name: Upload Playwright report and visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: batch4-playwright-evidence
+          path: |
+            playwright-report/
+            test-results/
+            /tmp/27-app.log
+          if-no-files-found: warn
+          retention-days: 14
