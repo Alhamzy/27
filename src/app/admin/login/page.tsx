@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/browser';
 
@@ -14,6 +14,16 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.replace('/admin');
+        router.refresh();
+      }
+    });
+  }, [router]);
 
   const bootstrapPocAdmin = async () => {
     const supabase = createClient();
@@ -69,9 +79,9 @@ export default function AdminLoginPage() {
         <div className="brand-mark">27</div>
         <div className="admin-title-wrap">
           <div className="admin-title-row"><h1>حساب مشرف المسجد</h1></div>
-          <p>نسخة POC بسيطة: أنشئ حساباً أو سجّل الدخول لتعديل مواقيت الإقامة</p>
+          <p>أنشئ حساباً أو سجّل الدخول لتعديل مواقيت الإقامة</p>
         </div>
-        <button className="icon-button" onClick={() => router.push('/')} aria-label="إغلاق">×</button>
+        <button className="icon-button" onClick={() => router.push('/')} aria-label="العودة لمواقيت الصلاة">×</button>
       </header>
 
       <section className="admin-mosque-card" style={{ maxWidth: 520, marginInline: 'auto' }}>
@@ -125,6 +135,10 @@ export default function AdminLoginPage() {
               : (mode === 'signin' ? 'تسجيل الدخول' : 'إنشاء الحساب')}
           </button>
         </form>
+
+        <button className="ghost-action wide" type="button" onClick={() => router.push('/')} style={{ marginTop: 10 }}>
+          العودة لمواقيت الصلاة
+        </button>
       </section>
     </main>
   );
