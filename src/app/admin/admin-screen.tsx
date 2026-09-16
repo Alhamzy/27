@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Mosque, MosqueSchedule, PrayerKey } from '@/lib/domain/prayer';
+import { createClient } from '@/lib/supabase/browser';
 
 const prayerNames: Record<PrayerKey, string> = {
   fajr: 'صلاة الفجر',
@@ -39,13 +40,22 @@ function formatTime(time: string) {
   return `${String(h).padStart(2, '0')}:${m} ${suffix}`;
 }
 
+function friendlyError(message?: string) {
+  const value = message ?? '';
+  if (value.includes('Authentication required') || value.includes('JWT')) return 'يلزم تسجيل دخول المشرف لحفظ التغييرات.';
+  if (value.includes('Not authorized')) return 'ليس لديك صلاحية تعديل هذا المسجد.';
+  if (value.includes('same name and area')) return 'يوجد مسجد بنفس الاسم والمنطقة بالفعل.';
+  return 'تعذر حفظ التغييرات. حاول مرة أخرى.';
+}
+
 export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule: MosqueSchedule }) {
   const router = useRouter();
-  const [draftMosques, setDraftMosques] = useState<Mosque[]>(mosques);
   const [showAdd, setShowAdd] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newArea, setNewArea] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const initialDraft = useMemo<DraftRule[]>(() => schedule.rows.map((row) => ({
     prayer: row.prayer,
@@ -63,28 +73,62 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
 
   const reset = () => setRules(initialDraft);
 
-  const savePreview = () => {
-    setToast('تم حفظ التغييرات في نسخة المعاينة');
-    window.setTimeout(() => setToast(null), 2600);
+  const saveRules = async () => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const payload = rules.map((rule) => ({
+        prayer: rule.prayer,
+        rule_type: rule.mode,
+        offset_minutes: rule.mode === 'offset' ? rule.offset : null,
+        fixed_time: rule.mode === 'fixed' ? rule.fixedTime : null,
+      }));
+      const { error } = await supabase.rpc('save_iqamah_rules', {
+        p_mosque_id: schedule.mosque.id,
+        p_rules: payload,
+      });
+      if (error) throw error;
+      setToast('تم حفظ مواقيت الإقامة وتسجيل التغيير بنجاح');
+      router.refresh();
+    } catch (error) {
+      setToast(friendlyError(error instanceof Error ? error.message : undefined));
+    } finally {
+      setSaving(false);
+      window.setTimeout(() => setToast(null), 3200);
+    }
   };
 
-  const addMosquePreview = () => {
+  const createMosque = async () => {
     const name = newName.trim();
-    if (!name) return;
-    const tempId = `preview-${Date.now()}`;
-    setDraftMosques((current) => [...current, {
-      id: tempId,
-      name_ar: name,
-      name_en: null,
-      area_ar: newArea.trim() || 'مسقط',
-      city_key: 'muscat',
-      status: 'active',
-    }]);
-    setNewName('');
-    setNewArea('');
-    setShowAdd(false);
-    setToast('تمت إضافة المسجد للمعاينة — الحفظ الدائم يأتي مع صلاحيات الإدارة');
-    window.setTimeout(() => setToast(null), 3600);
+    const area = newArea.trim();
+    if (!name || !area) {
+      setToast('أدخل اسم المسجد والمنطقة أولاً.');
+      return;
+    }
+    setCreating(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('create_mosque_as_owner', {
+        p_name_ar: name,
+        p_name_en: null,
+        p_area_ar: area,
+        p_city_key: 'muscat',
+        p_latitude: null,
+        p_longitude: null,
+      });
+      if (error) throw error;
+      setShowAdd(false);
+      setNewName('');
+      setNewArea('');
+      setToast('تمت إضافة المسجد. يمكنك الآن ضبط مواقيت الإقامة.');
+      router.push(`/admin?mosque=${data}`);
+      router.refresh();
+    } catch (error) {
+      setToast(friendlyError(error instanceof Error ? error.message : undefined));
+    } finally {
+      setCreating(false);
+      window.setTimeout(() => setToast(null), 3400);
+    }
   };
 
   return (
@@ -96,7 +140,7 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
             <h1>إدارة مواقيت الإقامة</h1>
             <span className="admin-badge">مشرف معتمد</span>
           </div>
-          <p>آخر تحديث: اليوم، 08:42 ص</p>
+          <p>اختر المسجد وعدّل الإقامة بسرعة</p>
         </div>
         <button className="icon-button" onClick={() => router.push('/')} aria-label="إغلاق">×</button>
       </header>
@@ -113,15 +157,9 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
             <select
               className="mosque-admin-select"
               value={schedule.mosque.id}
-              onChange={(event) => {
-                if (event.target.value.startsWith('preview-')) {
-                  setToast('المسجد الجديد في وضع المعاينة فقط حالياً');
-                  return;
-                }
-                router.push(`/admin?mosque=${event.target.value}`);
-              }}
+              onChange={(event) => router.push(`/admin?mosque=${event.target.value}`)}
             >
-              {draftMosques.map((mosque) => <option value={mosque.id} key={mosque.id}>{mosque.name_ar}</option>)}
+              {mosques.map((mosque) => <option value={mosque.id} key={mosque.id}>{mosque.name_ar}</option>)}
             </select>
           </div>
         </div>
@@ -160,7 +198,7 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
                       aria-label={`دقائق ${prayerNames[rule.prayer]}`}
                       value={rule.offset}
                       inputMode="numeric"
-                      onChange={(event) => changeRule(rule.prayer, { offset: Math.max(0, Number(event.target.value) || 0) })}
+                      onChange={(event) => changeRule(rule.prayer, { offset: Math.max(0, Math.min(180, Number(event.target.value) || 0)) })}
                     />
                     <button onClick={() => changeRule(rule.prayer, { offset: Math.min(180, rule.offset + 5) })}>+</button>
                   </div>
@@ -184,18 +222,18 @@ export function AdminScreen({ mosques, schedule }: { mosques: Mosque[]; schedule
       <div className="admin-savebar">
         <button className="danger-link" onClick={reset}>الاستعادة الافتراضية</button>
         <button className="ghost-action" onClick={reset}>تراجع</button>
-        <button className="primary-action" onClick={savePreview}>✓ حفظ التغييرات</button>
+        <button className="primary-action" disabled={saving} onClick={saveRules}>{saving ? 'جارٍ الحفظ…' : '✓ حفظ التغييرات'}</button>
       </div>
 
       {showAdd && (
         <div className="modal-backdrop" role="presentation" onClick={() => setShowAdd(false)}>
           <section className="admin-modal" role="dialog" aria-modal="true" aria-label="إضافة مسجد" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header"><h2>إضافة مسجد</h2><button className="icon-button" onClick={() => setShowAdd(false)}>×</button></div>
-            <p>أضف بيانات المسجد الأساسية، ثم يمكنك ضبط مواقيت الإقامة مباشرة.</p>
+            <p>أضف بيانات المسجد الأساسية، ثم انتقل مباشرة لضبط مواقيت الإقامة.</p>
             <label>اسم المسجد<input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="مثال: مسجد النور" /></label>
             <label>المنطقة<input value={newArea} onChange={(event) => setNewArea(event.target.value)} placeholder="مثال: الخوض" /></label>
             <label>المدينة<select defaultValue="muscat"><option value="muscat">مسقط</option></select></label>
-            <button className="primary-action wide" onClick={addMosquePreview}>إضافة والانتقال إلى الضبط</button>
+            <button className="primary-action wide" disabled={creating} onClick={createMosque}>{creating ? 'جارٍ الإضافة…' : 'إضافة والانتقال إلى الضبط'}</button>
           </section>
         </div>
       )}
