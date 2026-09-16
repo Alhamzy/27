@@ -1,12 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #f5fbf4;
+  --bg: #f6fbf5;
   --surface: #ffffff;
-  --ink: #171d19;
-  --muted: #717973;
-  --primary: #1b4332;
-  --gold: #c59b27;
-  --border: #e8e2d9;
+  --surface-soft: #eef6ef;
+  --ink: #17251d;
+  --muted: #748078;
+  --primary: #0f4936;
+  --primary-deep: #08382d;
+  --primary-soft: #dff4e8;
+  --gold: #b08b20;
+  --border: #dce8df;
+  --danger: #c83c31;
 }
 
 * { box-sizing: border-box; }
@@ -18,3 +22,351 @@ body {
 }
 button, input, select { font: inherit; }
 main { min-height: 100vh; }
+
+.public-shell {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 18px 18px 44px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 2px 18px;
+}
+
+.topbar h1 {
+  margin: 2px 0 0;
+  font-size: clamp(30px, 8vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--primary);
+  color: white;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 8px 24px rgb(15 73 54 / 12%);
+}
+
+.mosque-picker-card,
+.prayer-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgb(19 60 42 / 5%);
+}
+
+.mosque-picker-card {
+  border-radius: 22px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.mosque-picker-card > label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.mosque-picker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.mosque-picker-row > div {
+  min-width: 0;
+}
+
+.mosque-picker-row strong,
+.mosque-picker-row span {
+  display: block;
+}
+
+.mosque-picker-row strong {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.mosque-picker-row span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mosque-picker-row select {
+  min-width: 124px;
+  max-width: 46%;
+  border: 1px solid #cfe1d5;
+  color: var(--primary);
+  background: #f3faf5;
+  border-radius: 13px;
+  padding: 10px 12px;
+  font-weight: 700;
+  outline: none;
+}
+
+.mosque-picker-row select:focus {
+  box-shadow: 0 0 0 3px rgb(15 73 54 / 10%);
+}
+
+.freshness-line {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf2ee;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.verified-dot,
+.row-dot {
+  display: inline-block;
+  border-radius: 50%;
+  background: #17a575;
+  flex: 0 0 auto;
+}
+
+.verified-dot { width: 8px; height: 8px; }
+.row-dot { width: 10px; height: 10px; }
+
+.next-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--primary-deep), #0b5140);
+  color: white;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 14px 34px rgb(7 57 44 / 18%);
+  margin-bottom: 22px;
+}
+
+.next-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -30px -60px auto;
+  width: 170px;
+  height: 170px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 24px rgb(255 255 255 / 3%), 0 0 0 48px rgb(255 255 255 / 2%);
+}
+
+.next-card-topline {
+  color: #d3ebdf;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+.next-prayer-name {
+  font-size: clamp(29px, 7vw, 40px);
+  font-weight: 800;
+  margin-bottom: 22px;
+}
+
+.next-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.next-time-grid > div {
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 7%);
+  border-radius: 15px;
+  padding: 12px;
+}
+
+.next-time-grid span,
+.next-time-grid strong {
+  display: block;
+}
+
+.next-time-grid span {
+  color: #b8d4c8;
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+
+.next-time-grid strong {
+  font-size: 22px;
+}
+
+.countdown-pill {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16px;
+  background: #d8b34e;
+  color: #183126;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.next-card-note {
+  color: #cee6db;
+  margin: 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.section-heading h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.section-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prayer-list {
+  display: grid;
+  gap: 10px;
+}
+
+.prayer-row {
+  border-radius: 18px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1.2fr .8fr 1fr;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.prayer-row.is-next {
+  border-color: #9fd8b9;
+  background: #f8fdfa;
+  transform: translateY(-1px);
+}
+
+.prayer-name-block {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.prayer-name-block strong,
+.prayer-name-block small,
+.time-cell span,
+.time-cell strong {
+  display: block;
+}
+
+.prayer-name-block strong {
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.prayer-name-block small {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.time-cell {
+  text-align: center;
+}
+
+.time-cell span {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.time-cell strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.muted-time strong {
+  color: #54665b;
+  font-weight: 600;
+}
+
+.iqamah-time {
+  padding: 9px 8px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.iqamah-time strong {
+  color: var(--primary);
+  font-size: 17px;
+}
+
+.public-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 3px 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.empty-state {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 72px 22px;
+  text-align: center;
+}
+
+.empty-state .brand-mark {
+  margin: 0 auto 22px;
+}
+
+.empty-state h1 { margin: 0 0 10px; }
+.empty-state p, .empty-state small { color: var(--muted); }
+
+@media (max-width: 560px) {
+  .public-shell { padding: 14px 14px 34px; }
+  .topbar { padding-bottom: 14px; }
+  .brand-mark { width: 44px; height: 44px; }
+  .mosque-picker-card { padding: 14px; border-radius: 19px; }
+  .mosque-picker-row { align-items: flex-start; }
+  .mosque-picker-row strong { font-size: 18px; }
+  .mosque-picker-row select { min-width: 108px; padding: 9px; font-size: 12px; }
+  .next-card { padding: 19px; border-radius: 22px; }
+  .next-time-grid strong { font-size: 20px; }
+  .prayer-row {
+    grid-template-columns: 1.05fr .8fr .95fr;
+    padding: 12px 10px;
+    border-radius: 16px;
+  }
+  .prayer-name-block strong { font-size: 15px; }
+  .prayer-name-block small { font-size: 9px; }
+  .time-cell strong { font-size: 13px; }
+  .iqamah-time strong { font-size: 14px; }
+  .public-footer { flex-direction: column; }
+}
