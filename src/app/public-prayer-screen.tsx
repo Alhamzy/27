@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Mosque, MosqueSchedule, PrayerKey } from '../lib/domain/prayer';
+import { CorrectionSuggestion } from './correction-suggestion';
 
 const prayerNames: Record<PrayerKey, string> = {
   fajr: 'الفجر',
@@ -149,6 +150,12 @@ export function PublicPrayerScreen({ mosques, schedule }: { mosques: Mosque[]; s
               </article>
             );
           })}
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+          <CorrectionSuggestion schedule={schedule} />
+          <button className="secondary-action" type="button" onClick={() => router.push('/admin')}>
+            دخول المشرفين
+          </button>
         </div>
       </section>
 
