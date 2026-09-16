@@ -1,0 +1,39 @@
+name: Refresh MARA prayer times
+
+on:
+  push:
+    branches: [feature/mara-prayer-api]
+    paths:
+      - 'scripts/fetch_mara_prayer_times.py'
+      - '.github/workflows/mara-prayer-times.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '15 20 25 * *'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests beautifulsoup4
+      - name: Fetch September–December 2026 from official MARA timetable
+        run: python scripts/fetch_mara_prayer_times.py 2026 9 12 src/data/mara-muscat-2026.json
+      - name: Commit refreshed mirror
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/mara-muscat-2026.json
+          if git diff --cached --quiet; then
+            echo 'No prayer-time changes.'
+            exit 0
+          fi
+          git commit -m 'Refresh official MARA prayer times mirror'
+          git push
