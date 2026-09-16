@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMaraMonth, maraSource } from '@/lib/prayer-times/mara';
+import { getMaraMonth, maraGeneratedAt, maraSource } from '@/lib/prayer-times/mara';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,33 +20,26 @@ export async function GET(request: NextRequest) {
 
       const year = Number(match[1]);
       const month = Number(match[2]);
+      if (month < 1 || month > 12) return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
+
       const days = await getMaraMonth(year, month);
       const day = days.find((item) => item.date === date);
       if (!day) return NextResponse.json({ error: 'Prayer times not found for that date' }, { status: 404 });
 
-      return NextResponse.json({
-        source: maraSource,
-        lastUpdated: new Date().toISOString(),
-        data: day,
-      });
+      return NextResponse.json({ source: maraSource, lastUpdated: maraGeneratedAt, data: day });
     }
 
-    const year = parseInteger(params.get('year'), new Date().getUTCFullYear());
+    const year = parseInteger(params.get('year'), 2026);
     if (!year || Number.isNaN(year)) return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
 
     const month = parseInteger(params.get('month'));
-    if (month != null && !Number.isNaN(month)) {
+    if (month != null) {
+      if (Number.isNaN(month) || month < 1 || month > 12) return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
       const data = await getMaraMonth(year, month);
-      return NextResponse.json({
-        source: maraSource,
-        year,
-        month,
-        lastUpdated: new Date().toISOString(),
-        data,
-      });
+      return NextResponse.json({ source: maraSource, year, month, lastUpdated: maraGeneratedAt, data });
     }
 
-    const fromMonth = parseInteger(params.get('fromMonth'), 1);
+    const fromMonth = parseInteger(params.get('fromMonth'), 9);
     const toMonth = parseInteger(params.get('toMonth'), 12);
     if (!fromMonth || !toMonth || Number.isNaN(fromMonth) || Number.isNaN(toMonth) || fromMonth < 1 || toMonth > 12 || fromMonth > toMonth) {
       return NextResponse.json({ error: 'Invalid month range' }, { status: 400 });
@@ -57,19 +50,12 @@ export async function GET(request: NextRequest) {
       months.push({ month: currentMonth, data: await getMaraMonth(year, currentMonth) });
     }
 
-    return NextResponse.json({
-      source: maraSource,
-      year,
-      fromMonth,
-      toMonth,
-      lastUpdated: new Date().toISOString(),
-      months,
-    });
+    return NextResponse.json({ source: maraSource, year, fromMonth, toMonth, lastUpdated: maraGeneratedAt, months });
   } catch (error) {
     console.error('Prayer-times API failed', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to load prayer times' },
-      { status: 502 },
+      { status: 404 },
     );
   }
 }
