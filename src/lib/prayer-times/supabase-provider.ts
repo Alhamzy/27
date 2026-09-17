@@ -16,8 +16,9 @@ export class SupabasePrayerTimeProvider implements PrayerTimeProvider {
     if (exact.error) throw exact.error;
     if (exact.data) return exact.data as CityPrayerTimes;
 
-    // POC fallback: use the latest available row for that city until an official
-    // automated Oman provider is connected. The UI can still surface the source.
+    // POC fallback: reuse the latest available time-of-day values, but anchor them
+    // to the requested day. Otherwise the countdown compares today's clock against
+    // yesterday's date and incorrectly thinks every congregation has already ended.
     const fallback = await this.client
       .from('city_prayer_times')
       .select('city_key,prayer_date,fajr,dhuhr,asr,maghrib,isha,source_name,source_url,fetched_at')
@@ -28,6 +29,11 @@ export class SupabasePrayerTimeProvider implements PrayerTimeProvider {
       .maybeSingle();
 
     if (fallback.error) throw fallback.error;
-    return (fallback.data as CityPrayerTimes | null) ?? null;
+    if (!fallback.data) return null;
+
+    return {
+      ...(fallback.data as CityPrayerTimes),
+      prayer_date: prayerDate,
+    };
   }
 }
