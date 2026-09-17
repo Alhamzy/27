@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { AdminScreen } from './admin-screen';
+import { PocAdminScreen } from './poc-admin-screen';
 import { getMosqueSchedule, listActiveMosques } from '@/lib/schedules';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <main className="empty-state" data-ui-baseline="stitch-27_2" dir="rtl">
         <div className="brand-mark">27</div>
         <h1>لا توجد مساجد متاحة</h1>
-        <p>أضف مسجداً قبل تعديل مواقيت الإقامة.</p>
+        <p>لا توجد بيانات مسجد في النسخة التجريبية.</p>
       </main>
     );
   }
@@ -40,5 +40,5 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const selected = mosques.find((mosque) => mosque.id === params?.mosque) ?? mosques[0];
   const schedule = await getMosqueSchedule(selected.id, omanToday());
 
-  return <AdminScreen mosques={mosques} schedule={schedule} />;
+  return <PocAdminScreen schedule={schedule} />;
 }
