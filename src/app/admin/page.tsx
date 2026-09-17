@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { AdminScreen } from './admin-screen';
-import { getMosqueSchedule } from '@/lib/schedules';
-import type { Mosque } from '@/lib/domain/prayer';
-import { createAuthServerClient } from '@/lib/supabase/auth-server';
+import { getMosqueSchedule, listActiveMosques } from '@/lib/schedules';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,37 +19,26 @@ function omanToday() {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  const params = await searchParams;
-  const supabase = await createAuthServerClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !authData.user) {
+  const cookieStore = await cookies();
+  if (cookieStore.get('poc_admin')?.value !== '1') {
     redirect('/admin/login');
   }
 
-  const { data: assignments, error: assignmentError } = await supabase
-    .from('mosque_admins')
-    .select('role, mosque:mosques!inner(id,name_ar,name_en,area_ar,city_key,status)')
-    .eq('user_id', authData.user.id);
-
-  if (assignmentError) throw assignmentError;
-
-  const mosques = (assignments ?? [])
-    .map((assignment) => assignment.mosque)
-    .filter(Boolean) as unknown as Mosque[];
+  const params = await searchParams;
+  const mosques = await listActiveMosques();
 
   if (!mosques.length) {
     return (
       <main className="empty-state" data-ui-baseline="stitch-27_2" dir="rtl">
         <div className="brand-mark">27</div>
-        <h1>لا توجد مساجد مرتبطة بحسابك</h1>
-        <p>يجب تعيين حسابك كمشرف لمسجد قبل أن تتمكن من تعديل مواقيت الإقامة.</p>
+        <h1>لا توجد مساجد متاحة</h1>
+        <p>أضف مسجداً قبل تعديل مواقيت الإقامة.</p>
       </main>
     );
   }
 
   const selected = mosques.find((mosque) => mosque.id === params?.mosque) ?? mosques[0];
-  const schedule = await getMosqueSchedule(selected.id, omanToday(), supabase);
+  const schedule = await getMosqueSchedule(selected.id, omanToday());
 
   return <AdminScreen mosques={mosques} schedule={schedule} />;
 }
