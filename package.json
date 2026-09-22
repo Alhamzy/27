@@ -1,5 +1,5 @@
 {
-  "name": "27",
+  "name": "workout-poc",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,6 +14,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.57.4",
+    "firebase": "^12.19.0",
     "next": "^15.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
